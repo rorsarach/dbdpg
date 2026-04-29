@@ -6,6 +6,9 @@ Github items can be found by using: https://github.com/bucardo/dbdpg/issues/XXX
 
 Version 3.20.1  (unreleased)
 
+ - Fix a memory leak in the libpq 17 PQclosePrepared cleanup path when
+     destroying server-side prepared statement handles.
+
  - Set imp_dbh->async_sth when a prepare is successfully sent from pg_st_prepare_statement
    Don't execute "result auto-retrieve" code for a successful async prepare
    Increment imp_dbh->prepare_number when success of an async prepare is detected in handle_old_async

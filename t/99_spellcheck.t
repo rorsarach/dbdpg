@@ -427,6 +427,7 @@ FetchHashKeyName
 fetchrow
 fh
 filename
+filesystem
 firstword
 fk
 FreeBSD
@@ -701,6 +702,7 @@ prereqs
 PrintError
 printf
 PrintWarn
+proc
 profiler
 PROGRA
 projdisplay
