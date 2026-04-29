@@ -140,7 +140,7 @@ $. = 0;
 while (<$fh>) {
     chomp;
     next if ! /\w/;
-    next if /^RT refers to/;
+    next if /found by using/;
     next if /^Version [0-9]+\.[0-9]+/;
     next if /^Version \?\?/;
     next if /SYSTEM VIEW/;
