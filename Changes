@@ -13,16 +13,15 @@ Version 3.20.1  (unreleased)
    Don't execute "result auto-retrieve" code for a successful async prepare
    Increment imp_dbh->prepare_number when success of an async prepare is detected in handle_old_async
    [Rainer Weikusat, reported by Michael Kröll]
-   (Github issue #183, PR #184)
+   (Github issue #183, pull request #184)
 
  - Fix hangup of queries like "COPY TO STDOUT" in async mode
-   [Ed Sabol]
-   [Alexander Gorlov]
-   (Github issue #98, PR #101 and #163)
+   [Ed Sabol, Alexander Gorlov]
+   (Github issue #98, pull request #101 and #163)
 
  - Improve documentation about sslmode options
    [Ed Sabol, reported by Alexander Karelas]
-   (Github issue #180, PR #186)
+   (Github issue #180, pull request #186)
 
  - Drop ExtUtils::MakeMaker requirement back to 6.58, but recommend 7.64
    [Greg Sabino Mullane, Ed Sabol, reported by Peter Tribble]
@@ -31,6 +30,7 @@ Version 3.20.1  (unreleased)
  - Shorten path for test database to reduce OS errors
    [Greg Sabino Mullane, Ed Sabol, reported by Gianni Ceccarelli and Peter Dyballa]
    (Github issue #78 and #185)
+   (RT ticket #157598)
 
 
 Version 3.20.0  (released March 19, 2026)
