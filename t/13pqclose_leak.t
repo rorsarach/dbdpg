@@ -179,7 +179,7 @@ sub _rss_kb {
 ## visible growth well above the 8 MB limit used here.
 
 SKIP: {
-    skip 'Memory growth check requires Linux /proc filesystem', 1
+    skip 'Memory growth check requires Linux /proc', 1
         unless -r '/proc/self/status';
 
     skip 'PQclosePrepared path only compiled with libpq >= 17', 1

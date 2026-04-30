@@ -99,7 +99,11 @@ if ($arg{minversion} =~ /^[0-9]+/) {
 if ($arg{nohead}) {
     @versions = grep { ! /head/ } @versions;
 }
-@versions = sort { $a <=> $b } @versions;
+@versions = sort {
+    my $aa = $a =~ /head/ ? 9999 : $a;
+    my $bb = $b =~ /head/ ? 9999 : $b;
+    $aa <=> $bb
+} @versions;
 
 ## Sanity check:
 for my $lver (@versions) {
