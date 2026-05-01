@@ -4,7 +4,7 @@ RT items can be found by using: https://rt.cpan.org/Public/Bug/Display.html?id=X
 Github items can be found by using: https://github.com/bucardo/dbdpg/issues/XXX
 
 
-Version 3.20.1  (unreleased)
+Version 3.20.1  (released April 30, 2026)
 
  - Fix a memory leak in the libpq 17 PQclosePrepared cleanup path when
      destroying server-side prepared statement handles.

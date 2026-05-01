@@ -19,7 +19,12 @@ BEGIN {
     ($pgversion,$pglibversion,$pgvstring,$pgdefport) = ('?','?','?','?');
 }
 
-($helpconnect,$connerror,$dbh) = connect_database();
+eval {
+    ($helpconnect,$connerror,$dbh) = connect_database();
+};
+if ($@ =~ /Invalid initdb/) {
+    BAIL_OUT 'Could not connect: no initdb found';
+}
 
 if (! defined $dbh or $connerror) {
     plan skip_all => "Connection to database failed, cannot continue testing ($connerror) (dbh=" . (defined($dbh) ? $dbh : '<undefined>') . ')';
