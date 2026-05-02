@@ -641,7 +641,7 @@ int dbd_db_ping (SV * dbh)
 
     /* No matter what state we are in, send an empty query to the backend */
     TRACE_PQEXEC;
-    result = PQexec(imp_dbh->conn, "/* DBD::Pg ping test v3.20.1 */");
+    result = PQexec(imp_dbh->conn, "/* DBD::Pg ping test v3.20.2 */");
     TRACE_PQRESULTSTATUS;
     status = PQresultStatus(result);
     TRACE_PQCLEAR;
