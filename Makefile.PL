@@ -183,7 +183,9 @@ my $dbi_arch_dir;
         print "Could not load DBI::DBD - is the DBI module installed?\n";
         exit 0;
     }
-    local *STDOUT; ## Prevent duplicate debug info as WriteMakefile also calls this
+    # This is also called by WriteMakefile below, so disable all of this output
+    local $SIG{__WARN__} = sub {};
+    local *STDOUT;
     $dbi_arch_dir = DBI::DBD::dbd_dbi_arch_dir();
 }
 
