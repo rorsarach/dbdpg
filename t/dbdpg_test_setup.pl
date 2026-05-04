@@ -760,6 +760,10 @@ sub build_command {
     $string =~ s!([A-Z]{2,})!
       {
        my $var = $args->[$x++];
+       if (not defined $var) {
+         my $line = (caller)[2];
+         die "Invalid command string from line $line\n";
+       }
        if ($var =~ /\s/) {
            if ($effect eq 'backslash_spaces') {
                $var =~ s/ /\\ /g;
@@ -774,6 +778,14 @@ sub build_command {
        }
       }
       !gex;
+
+    ## Quick test to rule out shenanigans
+    (my $tempstring = $string) =~ s/ /SPACE/g;
+    if ($tempstring =~ /\s/) {
+        warn "Found non-space whitespace in command string: $tempstring\n";
+        Test::More::BAIL_OUT('Invalid whitespace found in command');
+        exit 1;
+    }
 
     my $debug = $ENV{DBDPG_DEBUG} || 0;
     $debug and Test::More::diag "Built command: ($string)";
