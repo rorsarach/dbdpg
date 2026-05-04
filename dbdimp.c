@@ -3981,7 +3981,7 @@ AV * dbd_st_fetch (SV * sth, imp_sth_t * imp_sth)
         else {
             char * value;
             TRACE_PQGETVALUE;
-            value = PQgetvalue(imp_sth->result, imp_sth->cur_tuple, i); 
+            value = PQgetvalue(imp_sth->result, imp_sth->cur_tuple, i);
 
             type_info = imp_sth->type_info[i];
 
