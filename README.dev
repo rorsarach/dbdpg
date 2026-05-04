@@ -769,8 +769,7 @@ of a diff.
 line, then add more details. Reference the github or other links with a "Report:"
 line. If others helped the committer, add them each with their own "Co-authored-by:"
 line. Please credit the reports of the issue with a "Reported-by:" line. If relevant,
-add a "Security:" line. See the Postgres git log, and the DBD::Pg git log, for
-examples.
+add a "Security:" line. Refer to recent Postgres and DBD::Pg git logs for examples.
 
 * Don't forget to test for memory leaks, particularly if you are working with 
 the more complicated sections of dbdimp.c. For a quick check, enter a loop, 
