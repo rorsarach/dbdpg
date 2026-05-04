@@ -304,8 +304,9 @@ int dbd_db_login6 (SV * dbh, imp_dbh_t * imp_dbh, char * dbname, char * uid, cha
     /* Check to see that the backend connection was successfully made */
     TRACE_PQSTATUS;
     connstatus = PQstatus(imp_dbh->conn);
-    switch (connstatus) {
-    case CONNECTION_BAD:
+    if (CONNECTION_OK == connstatus)
+        async_connect = 0;
+    else if (CONNECTION_BAD == connstatus) {
         strncpy(imp_dbh->sqlstate, "08006", 6); /* "CONNECTION FAILURE" */
         TRACE_PQERRORMESSAGE;
         pg_error(aTHX_ dbh, connstatus, PQerrorMessage(imp_dbh->conn));
@@ -315,9 +316,6 @@ int dbd_db_login6 (SV * dbh, imp_dbh_t * imp_dbh, char * dbname, char * uid, cha
         sv_free((SV *)imp_dbh->savepoints);
         if (TEND_slow) TRC(DBILOGFP, "%sEnd dbd_db_login (error)\n", THEADER_slow);
         return 0;
-
-    case CONNECTION_OK:
-        async_connect = 0;
     }
 
     /* Call the pg_warn function anytime this connection raises a notice */
@@ -643,7 +641,7 @@ int dbd_db_ping (SV * dbh)
 
     /* No matter what state we are in, send an empty query to the backend */
     TRACE_PQEXEC;
-    result = PQexec(imp_dbh->conn, "/* DBD::Pg ping test v3.20.1 */");
+    result = PQexec(imp_dbh->conn, "/* DBD::Pg ping test v3.20.2 */");
     TRACE_PQRESULTSTATUS;
     status = PQresultStatus(result);
     TRACE_PQCLEAR;
