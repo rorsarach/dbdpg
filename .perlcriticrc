@@ -91,6 +91,7 @@ stop_words = ActiveKids afterwards arrayref arrayrefs attr autocommit AutoCommit
 [-RegularExpressions::ProhibitEnumeratedClasses]
 [-RegularExpressions::ProhibitEscapedMetacharacters]
 [-RegularExpressions::ProhibitFixedStringMatches]
+[-RegularExpressions::ProhibitUnusualDelimiters]
 [-RegularExpressions::RequireDefault]
 [-RegularExpressions::RequireDotMatchAnything]
 [-RegularExpressions::RequireExtendedFormatting]
