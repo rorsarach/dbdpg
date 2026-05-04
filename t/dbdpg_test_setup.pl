@@ -787,6 +787,11 @@ sub build_command {
         exit 1;
     }
 
+    ## If this is Windows, do not specify a socket directory
+    if ($^O =~ /Win32/) {
+        $string =~ s/-o '-k .*?' -l/-l/;
+    }
+
     my $debug = $ENV{DBDPG_DEBUG} || 0;
     $debug and Test::More::diag "Built command: ($string)";
 
