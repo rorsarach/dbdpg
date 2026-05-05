@@ -26,6 +26,7 @@ if ($@ =~ /Invalid initdb/) {
     BAIL_OUT 'Could not connect: no initdb found';
 }
 
+$connerror = '' if ! defined $connerror;
 if (! defined $dbh or $connerror) {
     plan skip_all => "Connection to database failed, cannot continue testing ($connerror) (dbh=" . (defined($dbh) ? $dbh : '<undefined>') . ')';
 }

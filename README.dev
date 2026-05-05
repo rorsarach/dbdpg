@@ -208,7 +208,7 @@ t/20savepoints.t - Test savepoints.
 
 t/30unicode.t - Test Unicode. Or at least UTF8.
 
-t/99cleanup.t - Removes anything we have created for the tests (e.g. tables)
+t/98cleanup.t - Removes anything we have created for the tests (e.g. tables)
 
 t/99_lint.t - Various minor code cleanliness checks. Requires TEST_CRITIC to be set.
 
@@ -767,6 +767,12 @@ don't want to show up when you do a "git status". They are also ignored by make 
 across all committed files (which is rare). Always give a good description 
 of the exact changes made : assume that the log will be read independently 
 of a diff.
+
+* Make the first line of the commit a short but descriptive title. Add an empty
+line, then add more details. Reference the github or other links with a "Report:"
+line. If others helped the committer, add them each with their own "Co-authored-by:"
+line. Please credit the reports of the issue with a "Reported-by:" line. If relevant,
+add a "Security:" line. Refer to recent Postgres and DBD::Pg git logs for examples.
 
 * Don't forget to test for memory leaks, particularly if you are working with 
 the more complicated sections of dbdimp.c. For a quick check, enter a loop, 

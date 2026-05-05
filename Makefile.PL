@@ -5,7 +5,7 @@ use warnings;
 use 5.008001;
 
 ## No version.pm for this one, as the prereqs are not loaded yet.
-my $VERSION = '3.20.2';
+my $VERSION = '3.20.3';
 
 ## App::Info is stored inside t/lib
 ## Create a proper path so we can use it below
@@ -183,7 +183,9 @@ my $dbi_arch_dir;
         print "Could not load DBI::DBD - is the DBI module installed?\n";
         exit 0;
     }
-    local *STDOUT; ## Prevent duplicate debug info as WriteMakefile also calls this
+    # This is also called by WriteMakefile below, so disable all of this output
+    local $SIG{__WARN__} = sub {};
+    local *STDOUT;
     $dbi_arch_dir = DBI::DBD::dbd_dbi_arch_dir();
 }
 
@@ -220,9 +222,9 @@ my %opts =
     (
      NAME           => 'DBD::Pg',
      VERSION_FROM   => 'Pg.pm',
-     INC            => "-I$POSTGRES_INCLUDE -I$dbi_arch_dir",
+     INC            => qq{-I"$POSTGRES_INCLUDE" -I"$dbi_arch_dir"},
      OBJECT         => 'Pg$(OBJ_EXT) dbdimp$(OBJ_EXT) quote$(OBJ_EXT) types$(OBJ_EXT)',
-     LIBS           => ["-L$POSTGRES_LIB -lpq -lm"],
+     LIBS           => ["-L\"$POSTGRES_LIB\" -lpq -lm"],
      AUTHOR         => 'Greg Sabino Mullane',
      ABSTRACT       => 'PostgreSQL database driver for the DBI module',
      PREREQ_PM      => {

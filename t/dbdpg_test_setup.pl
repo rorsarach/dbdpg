@@ -16,6 +16,7 @@ my $superuser = 1;
 my $TEST_PORT_MIN = 5442;
 my $TEST_PORT_MAX = 5542;
 
+my $logfile = 'dbdpg_test.logfile';
 
 my $testfh;
 if (exists $ENV{TEST_OUTPUT}) {
@@ -184,17 +185,18 @@ version: $version
                     }
 
                     warn "Restarting test database $testdsn at $testdir\n";
-                    my $COM = qq{$pg_ctl -o '-k $testdir' -l $testdir/dbdpg_test.logfile -D $testdir/data start};
-                    if ($su) {
-                        $COM = qq{su -m $su -c "$COM"};
-                        chdir $testdir;
-                    }
+                    my $COM = $su ?
+                        build_command(q{su TESTUSER -m -c "PG_CTL -o '-k TESTDIR' -l LOGFILE -D DATADIR start"},
+                                      [$su, $pg_ctl, $testdir, "$testdir/$logfile", "$testdir/data"], 'backslash_spaces')
+                        : build_command(q{PG_CTL -o '-k TESTDIR' -l LOGFILE -D DATADIR start},
+                                        [$pg_ctl, $testdir, "$testdir/$logfile", "$testdir/data"]);
+                    $su and chdir $testdir;
                     $info = '';
                     eval { $info = qx{$COM}; };
                     my $err = $@;
                     $su and chdir $olddir;
                     if ($info !~ /starting/ and ($err or $info !~ /\w/)) {
-                        $err = "Could not startup THIS new database (err=$err) ($info)";
+                        $err = "Could not startup new database (err=$err) ($info)";
                         return $helpconnect, $err, undef;
                     }
                     ## Wait for it to startup and verify the connection
@@ -306,10 +308,9 @@ version: $version
 
         ## Make sure initdb exists and is working properly
         $ENV{LANG} = 'C';
+        my $initcom = build_command('INITDB --version 2>&1', [$initdb]);
         $info = '';
-        eval {
-            $info = qx{$initdb --version 2>&1};
-        };
+        eval { $info = qx{$initcom}; };
         last GETHANDLE if $@; ## Fail - initdb bad
         $version = 0;
         if (!defined $info or ($info !~ /Postgres|EnterpriseDB/i and $info !~ /run as root/)) {
@@ -343,10 +344,9 @@ version: $version
         if (! -e $pg_ctl) {
             $pg_ctl = 'pg_ctl';
         }
+        my $pgctlcom = build_command('PGCTL --help 2>&1', [$pg_ctl]);
         $info = '';
-        eval {
-            $info = qx{$pg_ctl --help 2>&1};
-        };
+        eval { $info = qx{$pgctlcom}; };
         last GETHANDLE if $@; ## Fail - pg_ctl bad
         if (!defined $info or ($info !~ /\@(?:[a-z.-]*?postgresql\.org|enterprisedb\.com)/ and $info !~ /run as root/)) {
             $@ = defined $initdb ? "Bad pg_ctl output: $info" : 'Bad pg_ctl output';
@@ -357,11 +357,9 @@ version: $version
         warn "Please wait, creating new Postgres cluster (version $version) for testing\n";
         $info = '';
         my $locale = $ENV{DBDPG_TEST_LOCALE} || 'C';
-        eval {
-            my $com = "$initdb --locale=$locale -E UTF8 -D $testdir/data";
-            $debug and warn" Attempting: $com\n";
-            $info = qx{$com 2>&1};
-        };
+        my $initdbcom = build_command('INITDB --locale=LOCALE -E utf8 -D DATADIR 2>&1',
+                                      [$initdb, $locale, "$testdir/data"]);
+        eval { $info = qx{$initdbcom}; };
         last GETHANDLE if $@; ## Fail - initdb bad
 
         ## initdb and pg_ctl cannot be run as root, so let's handle that
@@ -400,12 +398,12 @@ version: $version
                 next unless chown $uid, -1, $readme;
                 $su = $testuser;
                 $founduser++;
-                $info = '';
                 $olddir = getcwd;
-                eval {
-                    chdir $testdir;
-                    $info = qx{su -m $testuser -c "/bin/sh -c '$initdb --locale=C -E UTF8 -D $testdir/data 2>&1'"};
-                };
+                my $sucom = build_command(q{su TESTUSER -m -c "/bin/sh -c 'INITDB --locale=C -E utf8 -D DATADIR 2>&1'},
+                                          [$testuser, $initdb, "$testdir/data"], 'backslash_spaces');
+                chdir $testdir;
+                $info = '';
+                eval { $info = qx{$sucom}; };
                 my $err = $@;
                 chdir $olddir;
                 last if !$err;
@@ -444,24 +442,22 @@ version: $version
         if ($version >= 10) {
             $resetxlog =~ s/pg_resetxlog/pg_resetwal/;
         }
-        eval {
-            if ($su) {
-                $info = qx{su -m "$testuser" -c "$resetxlog --help"};
-            }
-            else {
-                $info = qx{$resetxlog --help};
-            }
-        };
+        my $resetcom = $su ?
+            build_command('su TESTUSER -m -c "RESETXLOG --help"',
+                          [$testuser, $resetxlog], 'backslash_spaces')
+            : build_command('RESETXLOG --help',
+                            [$resetxlog]);
+        $info = '';
+        eval { $info = qx{$resetcom}; };
         if (! $@ and $info =~ /XID/) {
             if (! -e "$testdir/data/postmaster.pid") {
-                eval {
-                    if ($su) {
-                        $info = qx{ su -m "$testuser" -c "$resetxlog -o 2222333344 $testdir/data" };
-                    }
-                    else {
-                        $info = qx{ $resetxlog -o 2222333344 $testdir/data };
-                    }
-                };
+                $resetcom = $su ?
+                    build_command('su TESTUSER -m -c "RESETXLOG -o 2222333344 DATADIR"',
+                                  [$testuser, $resetxlog, "$testdir/data"], 'backslash_spaces')
+                    : build_command('RESETXLOG -o 2222333344 DATADIR',
+                                    [$resetxlog, "$testdir/data"]);
+                $info = '';
+                eval { $info = qx{$resetcom}; };
                 ## We don't really care if it worked or not!
             }
         }
@@ -553,17 +549,15 @@ version: $version
             close $cfh or die qq{Could not close "$conf": $!\n};
 
             ## Attempt to start up the test server
-            $info = '';
-            my $COM = qq{$pg_ctl -o '-k $testdir' -l $testdir/dbdpg_test.logfile -D $testdir/data start};
+            my $COM = $su ?
+                build_command(q{su TESTUSER -m -c "PGCTL -o '-k TESTDIR' -l LOGFILE -D DATADIR start},
+                              [$su, $pg_ctl, $testdir, "$testdir/$logfile", "$testdir/data"], 'backslash_spaces')
+                : build_command(q{PGCTL -o '-k TESTDIR' -l LOGFILE -D DATADIR start},
+                                [$pg_ctl, $testdir, "$testdir/$logfile", "$testdir/data"]);
             $olddir = getcwd;
-            if ($su) {
-                chdir $testdir;
-                $COM = qq{su -m $su -c "$COM"};
-            }
-            $debug and Test::More::diag qq{Running: $COM};
-            eval {
-                $info = qx{$COM};
-            };
+            $su and chdir $testdir;
+            $info = '';
+            eval { $info = qx{$COM}; };
             my $err = $@;
             $su and chdir $olddir;
             if ($err) {
@@ -579,7 +573,7 @@ version: $version
             $testdsn .= ';host=localhost';
         }
         else {
-            $testdsn .= ";host=$testdir";
+            $testdsn .= build_command(';host=TESTDIR', [$testdir], 'backslash_spaces');
         }
 
         $debug and Test::More::diag qq{Test DSN: $testdsn};
@@ -755,6 +749,56 @@ return $helpconnect, '', $dbh;
 } ## end of connect_database
 
 
+sub build_command {
+
+    ## Build a command to pass to the system, quoting as needed
+    my $string = shift;
+    my $args = shift;
+    my $effect = shift || '';
+    my $x = 0;
+
+    $string =~ s!([A-Z]{2,})!
+      {
+       my $var = $args->[$x++];
+       if (not defined $var) {
+         my $line = (caller)[2];
+         die "Invalid command string from line $line\n";
+       }
+       if ($var =~ /\s/) {
+           if ($effect eq 'backslash_spaces') {
+               $var =~ s/ /\\ /g;
+               $var;
+           }
+           else {
+               qq{"$var"};
+           }
+       }
+       else {
+           $var;
+       }
+      }
+      !gex;
+
+    ## Quick test to rule out shenanigans
+    (my $tempstring = $string) =~ s/ /SPACE/g;
+    if ($tempstring =~ /\s/) {
+        warn "Found non-space whitespace in command string: $tempstring\n";
+        Test::More::BAIL_OUT('Invalid whitespace found in command');
+        exit 1;
+    }
+
+    ## If this is Windows, do not specify a socket directory
+    if ($^O =~ /Win32/) {
+        $string =~ s/-o '-k .*?' -l/-l/;
+    }
+
+    my $debug = $ENV{DBDPG_DEBUG} || 0;
+    $debug and Test::More::diag "Built command: ($string)";
+
+    return $string;
+}
+
+
 sub is_super {
 
     return $superuser;
@@ -921,15 +965,14 @@ sub shutdown_test_database {
     my ($testdsn,$testuser,$helpconnect,$su,$uid,$testdir,$pg_ctl,$initdb) = get_test_settings(); ## no critic (Variables::ProhibitUnusedVarsStricter)
 
     if (-e $testdir and -e "$testdir/data/postmaster.pid") {
-        my $COM = qq{$pg_ctl -D $testdir/data -m fast stop};
+        my $COM = $su ?
+            build_command('su TESTUSER -m -c "PGCTL stop -D DATADIR --mode fast"',
+                          [$su, $pg_ctl, "$testdir/data" ], 'backslash_spaces')
+            : build_command('PGCTL stop -D DATADIR --mode fast',
+                            [$pg_ctl, "$testdir/data" ], 'backslash_spaces');
         my $olddir = getcwd;
-        if ($su) {
-            $COM = qq{su $su -m -c "$COM"};
-            chdir $testdir;
-        }
-        eval {
-            qx{$COM};
-        };
+        $su and chdir $testdir;
+        eval { qx{$COM}; };
         $su and chdir $olddir;
     }
 
